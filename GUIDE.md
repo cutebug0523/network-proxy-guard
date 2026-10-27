@@ -74,6 +74,16 @@ network-proxy-guard qr --config ./node.json --output ./mobile-qr
 
 `setup` 和 `claude-reset` 的 `--yes` 相互独立，不能用一次“同意配置”覆盖清理、TUN 服务、VPS 变更或工单提交。这样设计是为了让高风险操作始终处在用户可见、可拒绝的范围内，而不是靠一长串默认授权。每次实际执行都要交代改了什么、备份在哪里、验证是否真正通过，以及还有哪些没有验证的风险。
 
+## 12. 配置哨兵
+
+`guard` 会直接审计 Verge 的实际状态，检查规则模式、IPv6、PAC、国内 DIRECT 和自动 DIRECT fallback，不再依赖 Agent 是否按要求回答。默认只报警，`--enforce --yes` 也只修回 mode、IPv6 和 PAC，并先备份，避免哨兵与用户有意修改配置打架。`--watch` 是前台监视而不是隐藏守护进程，profile 或订阅问题仍需重新走 setup 审核。
+
+```bash
+network-proxy-guard guard
+network-proxy-guard guard --watch
+network-proxy-guard guard --watch --enforce --yes
+```
+
 ## 推荐的完整使用顺序
 
 1. 先说明具体目标，不要一句“把网络全弄好”就让工具执行所有模块。

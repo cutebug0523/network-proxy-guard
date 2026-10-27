@@ -63,6 +63,7 @@ npx network-proxy-guard@latest reference
 
 - Clash Verge：保留旧配置、备份、生成并激活 VLESS Reality 本地配置、规则模式、关闭 PAC 直连兜底
 - 分流诊断：区分直连/显式代理/VPS 直连，检查 AI、Google、Stripe 等域名的实际路径
+- 配置哨兵：审计规则模式、IPv6、PAC 和国内 DIRECT，授权后可监视并修回应用设置漂移
 - Google 地区检测：VPS 直连证据 + 多地理库交叉验证，证据足够才生成工单草稿
 - Claude 重置：独立确认，清理常见 Claude Code/Desktop/CC Switch 配置，保留程序与共享 skills
 - 手机交付：同一份节点配置生成 VLESS 链接与本地二维码，不调用在线二维码服务
@@ -122,7 +123,24 @@ network-proxy-guard probe --proxy http://127.0.0.1:7897
 network-proxy-guard probe --offline
 ```
 
-### 4. Google 地区误判与 Lisa 工单
+### 4. 配置哨兵
+
+```bash
+# 只读审计；发现 global、IPv6 开启或危险 DIRECT 规则时返回非零
+network-proxy-guard guard
+
+# 前台监视，只报告变化
+network-proxy-guard guard --watch
+
+# 明确授权后修回 mode/IPv6/PAC；会先备份，不重写订阅或 profile
+network-proxy-guard guard --enforce --yes
+# 或在前台监视时自动修回这三项
+network-proxy-guard guard --watch --enforce --yes
+```
+
+`--enforce` 不带 `--yes` 仍然只是 dry-run。哨兵只自动修 `mode`、`ipv6`、`proxy_auto_config`，profile 中的分流问题必须重新走 setup 审核，避免和用户有意修改配置打架。
+
+### 5. Google 地区误判与 Lisa 工单
 
 ```bash
 # 本机结果，仅供初筛
@@ -137,7 +155,7 @@ network-proxy-guard google-region \
 
 只生成本地草稿，绝不自动提交。IP 更换可能伴随宿主机、SSH key、安全组变化；必须先向商家确认，不可直接授权重装或迁移。
 
-### 5. Claude 本机重置
+### 6. Claude 本机重置
 
 ```bash
 network-proxy-guard claude-reset

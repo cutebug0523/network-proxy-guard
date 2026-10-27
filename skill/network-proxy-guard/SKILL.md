@@ -26,6 +26,7 @@ The original tested setup used **LisaHost（丽萨主机）美国4837基础版**
 - New Xray/VLESS Reality server or port/protocol problems: read `references/xray-reality.md`.
 - Import/activate a Clash Verge profile or configure system proxy: read `references/auto-setup.md`.
 - Connectivity, slow routes, DNS, GeoIP, DIRECT fallback, TUN or WebRTC: read `references/diagnostics.md`.
+- Configuration drift, global mode, IPv6 re-enabled, domestic DIRECT violations, or a sentinel/watchdog: read `references/guard.md`.
 - Google treats a US IP as Hong Kong or a Lisa IP-change ticket is needed: read `references/google-ip-region.md`.
 - Claude Code/Desktop/CC Switch cleanup: read `references/claude-reset.md` and get separate approval.
 - Shadowrocket/mobile QR: read `references/mobile-qr.md`.

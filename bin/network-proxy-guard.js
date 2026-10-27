@@ -5,7 +5,8 @@ import { fileURLToPath } from 'node:url';
 import YAML from 'yaml';
 import { installSkill } from '../src/install.js';
 import { readNodeConfig, buildMihomoProfile } from '../src/node-config.js';
-import { setupProxy, printablePlan } from '../src/setup.js';
+import { setupProxy, printablePlan, defaultVergeDir } from '../src/setup.js';
+import { guardOnce, watchGuard } from '../src/guard.js';
 import { generateMobileQr } from '../src/qr.js';
 import { resetClaude } from '../src/claude-reset.js';
 import { detectGoogleRegion, buildLisaTicket, probeNetwork } from '../src/diagnostics.js';
@@ -20,6 +21,8 @@ Install the agent skill (no proxy/Claude changes):
   npx network-proxy-guard@latest install --target codex
 
 Commands:
+  guard         Audit rule/IPv6/PAC/domestic-DIRECT invariants [--verge-dir DIR]
+                Optional: --watch --enforce --yes (repair only with explicit approval)
   reference     Show the non-mandatory LisaHost reference environment
   install       Install only the skill files [--target agents|claude|codex|DIR] [--force]
   setup         Preview Clash Verge setup; --config FILE [--yes] [--restart]
@@ -58,6 +61,27 @@ async function main() {
   if (command === '--version' || command === '-v' || command === 'version') {
     const pkg = JSON.parse(fs.readFileSync(fileURLToPath(new URL('../package.json', import.meta.url)), 'utf8'));
     process.stdout.write(`${pkg.version}\n`);
+    return;
+  }
+
+  if (command === 'guard') {
+    const values = options(args, {
+      'verge-dir': { type: 'string' }, watch: { type: 'boolean', default: false },
+      enforce: { type: 'boolean', default: false }, yes: { type: 'boolean', default: false },
+    });
+    const vergeDir = values['verge-dir'] ? expandHome(values['verge-dir']) : defaultVergeDir();
+    if (values.watch) {
+      print({ watch: true, intervalMs: 2000, vergeDir, enforce: values.enforce && values.yes });
+      watchGuard({
+        vergeDir, enforce: values.enforce, yes: values.yes,
+        onResult: print,
+        onError: (error) => process.stderr.write(`guard: ${error.message}\n`),
+      });
+    } else {
+      const result = guardOnce({ vergeDir, enforce: values.enforce, yes: values.yes });
+      print(result);
+      if (!result.ok) process.exitCode = 1;
+    }
     return;
   }
 

@@ -33,6 +33,7 @@ test('setup dry-run is inert and apply preserves existing profiles and creates b
   assert.equal(fs.readFileSync(path.join(vergeDir, 'profiles.yaml'), 'utf8'), before);
 
   const result = await setupProxy({ home, vergeDir, node: fakeNode(), yes: true, runtime });
+  assert.equal(result.guard.ok, true);
   const profiles = YAML.parse(fs.readFileSync(path.join(vergeDir, 'profiles.yaml'), 'utf8'));
   assert.equal(profiles.items.length, 2);
   assert.ok(profiles.items.some((item) => item.uid === 'old'));

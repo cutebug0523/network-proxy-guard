@@ -4,6 +4,7 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import YAML from 'yaml';
 import { buildMihomoProfile } from './node-config.js';
+import { auditVerge } from './guard.js';
 import {
   atomicWrite, ensureDir, ensurePrivateDir, exists, homeDir,
   relativeDisplay, run, timestamp,
@@ -224,6 +225,7 @@ export async function setupProxy(options) {
       restartWarning = `Configuration applied, but Clash Verge reopen failed: ${error.message}`;
     }
   }
+  const guard = auditVerge(vergeDir);
   return {
     plan: {
       ...plan,
@@ -231,15 +233,17 @@ export async function setupProxy(options) {
       warnings: restartWarning ? [...warnings, restartWarning] : warnings,
     },
     validation,
+    guard,
     backup: relativeDisplay(backup, home),
   };
 }
 
 export function printablePlan(result) {
-  const { plan, validation, backup } = result;
+  const { plan, validation, backup, guard } = result;
   return {
     ...plan,
     validation: validation ? (validation.ok ? 'passed' : validation.skipped ? 'YAML only' : 'failed') : 'not run (dry-run)',
+    guard: guard ? { ok: guard.ok, violations: guard.violations, warnings: guard.warnings } : 'not run (dry-run)',
     backup,
   };
 }
