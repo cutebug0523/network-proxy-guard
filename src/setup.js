@@ -138,7 +138,9 @@ export async function setupProxy(options) {
   const tunReady = options.enableTun
     ? await (runtime.checkTun ?? defaultTunReady)()
     : null;
-  const warnings = [];
+  const warnings = [
+    'Automatic setup writes version-sensitive Verge internal files; export-profile offers the official UI import path',
+  ];
   if (!exists(vergeFile)) warnings.push('verge.yaml not found; system proxy settings must be checked in the UI');
   if (!exists(configFile)) warnings.push('config.yaml not found; a minimal rule-mode config will be created');
   if (running && !restart) warnings.push('Clash Verge is running; apply requires --restart or a manually quit app');

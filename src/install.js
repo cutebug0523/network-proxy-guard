@@ -20,16 +20,25 @@ export function installSkill(options = {}) {
     throw new Error(`Skill already exists: ${destination}. Use --force to back it up and replace it.`);
   }
   fs.mkdirSync(root, { recursive: true });
-  let backup = null;
-  if (fs.existsSync(destination)) {
-    backup = `${destination}.backup-${new Date().toISOString().replace(/[:.]/g, '-')}`;
-    fs.renameSync(destination, backup);
-  }
+  const temporary = `${destination}.tmp-${process.pid}-${Date.now()}`;
   try {
-    fs.cpSync(source, destination, { recursive: true, errorOnExist: true, force: false });
+    fs.cpSync(source, temporary, { recursive: true, errorOnExist: true, force: false });
   } catch (error) {
-    if (fs.existsSync(destination)) fs.rmSync(destination, { recursive: true, force: true });
-    if (backup) fs.renameSync(backup, destination);
+    fs.rmSync(temporary, { recursive: true, force: true });
+    throw error;
+  }
+  let backup = null;
+  try {
+    if (fs.existsSync(destination)) {
+      backup = `${destination}.backup-${new Date().toISOString().replace(/[:.]/g, '-')}`;
+      fs.renameSync(destination, backup);
+    }
+    fs.renameSync(temporary, destination);
+  } catch (error) {
+    fs.rmSync(temporary, { recursive: true, force: true });
+    if (backup && fs.existsSync(backup) && !fs.existsSync(destination)) {
+      fs.renameSync(backup, destination);
+    }
     throw error;
   }
   return { destination, backup };

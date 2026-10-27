@@ -5,12 +5,26 @@ import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { fakeNode } from './helpers.js';
 
 const bin = fileURLToPath(new URL('../bin/network-proxy-guard.js', import.meta.url));
 
 function run(args) {
   return spawnSync(process.execPath, [bin, ...args], { encoding: 'utf8' });
 }
+
+test('export-profile writes YAML without touching a Verge directory', (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'npg-export-'));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  const config = path.join(root, 'node.json');
+  const output = path.join(root, 'profile.yaml');
+  fs.writeFileSync(config, JSON.stringify(fakeNode()));
+  const result = run(['export-profile', '--config', config, '--output', output]);
+  assert.equal(result.status, 0, result.stderr);
+  const yaml = fs.readFileSync(output, 'utf8');
+  assert.ok(yaml.includes('type: vless'));
+  assert.ok(!fs.existsSync(path.join(root, 'profiles.yaml')));
+});
 
 test('npm CLI installs files only and force update preserves a backup', (t) => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'npg-install-'));

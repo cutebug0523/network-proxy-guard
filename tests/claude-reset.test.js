@@ -39,6 +39,11 @@ test('Claude reset rejects shared or over-broad paths without changing them', as
   }), /Extra path must be a specifically named/);
   assert.ok(fs.existsSync(path.join(home, '.claude/settings.json')));
 
+  const alias = path.join(home, 'alias-claude');
+  fs.symlinkSync(path.join(home, '.claude', 'skills'), alias, 'dir');
+  await assert.rejects(resetClaude({ home, extraPaths: [alias], runtime }), /protected or shared path/);
+  assert.ok(fs.existsSync(path.join(home, '.claude', 'skills', 'shared', 'SKILL.md')));
+
   const linkedHome = fs.mkdtempSync(path.join(os.tmpdir(), 'npg-reset-link-'));
   t.after(() => fs.rmSync(linkedHome, { recursive: true, force: true }));
   fs.mkdirSync(path.join(linkedHome, 'real-claude'));
@@ -52,6 +57,7 @@ test('Claude reset dry-run is inert and apply preserves programs, skills and gen
   const home = fixture(t);
   const dry = await resetClaude({ home, runtime });
   assert.equal(dry.plan.mode, 'dry-run');
+  assert.equal(dry.plan.shellEdits.find((edit) => edit.file === '.zshrc').removedLines, 1);
   assert.ok(!JSON.stringify(dry).includes('do-not-print-this'));
   assert.ok(fs.existsSync(path.join(home, '.claude/settings.json')));
 
@@ -73,4 +79,52 @@ test('Claude reset dry-run is inert and apply preserves programs, skills and gen
   const backup = result.backup.replace(/^~/, home);
   assert.ok(fs.existsSync(path.join(backup, 'files', '.claude', 'settings.json')));
   assert.ok(fs.existsSync(path.join(backup, 'manifest.json')));
+});
+
+test('a specifically named extra path inside HOME remains usable', async (t) => {
+  const home = fixture(t);
+  const extra = path.join(home, '.config', 'anthropic');
+  fs.mkdirSync(extra, { recursive: true });
+  fs.writeFileSync(path.join(extra, 'config.json'), '{}');
+  const dry = await resetClaude({ home, extraPaths: [extra], runtime });
+  assert.ok(dry.plan.targets.includes('~/.config/anthropic'));
+  const result = await resetClaude({
+    home, yes: true, extraPaths: [extra],
+    runtime: { ...runtime, unsetLaunchEnv: async () => {} },
+  });
+  assert.equal(result.plan.mode, 'applied');
+  assert.ok(!fs.existsSync(extra));
+});
+
+test('uppercase Skills is preserved on case-insensitive filesystems', async (t) => {
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'npg-reset-case-'));
+  t.after(() => fs.rmSync(home, { recursive: true, force: true }));
+  fs.mkdirSync(path.join(home, '.claude', 'Skills'), { recursive: true });
+  fs.writeFileSync(path.join(home, '.claude', 'Skills', 'keep.md'), 'keep');
+  fs.writeFileSync(path.join(home, '.claude', 'settings.json'), '{}');
+  const dry = await resetClaude({ home, runtime });
+  assert.ok(!dry.plan.targets.some((target) => target.toLowerCase().includes('/skills')));
+  const result = await resetClaude({
+    home, yes: true,
+    runtime: { ...runtime, unsetLaunchEnv: async () => {} },
+  });
+  assert.equal(result.plan.mode, 'applied');
+  assert.ok(fs.existsSync(path.join(home, '.claude', 'Skills', 'keep.md')));
+});
+
+test('launchd failure is explicit and does not trigger a misleading file rollback', async (t) => {
+  const home = fixture(t);
+  const result = await resetClaude({
+    home, yes: true,
+    runtime: {
+      ...runtime,
+      unsetLaunchEnv: async () => { throw new Error('fixture unset failed'); },
+    },
+  });
+  assert.deepEqual(result.plan.launchEnvFailed, ['ANTHROPIC_BASE_URL']);
+  assert.ok(result.plan.warnings.some((warning) => warning.includes('Could not clear launchd')));
+  assert.ok(!fs.existsSync(path.join(home, '.claude', 'settings.json')));
+  const backup = result.backup.replace(/^~/, home);
+  const manifest = JSON.parse(fs.readFileSync(path.join(backup, 'manifest.json'), 'utf8'));
+  assert.deepEqual(manifest.launchEnvFailed, ['ANTHROPIC_BASE_URL']);
 });

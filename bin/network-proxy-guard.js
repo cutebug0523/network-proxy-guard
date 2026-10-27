@@ -2,8 +2,9 @@
 import fs from 'node:fs';
 import { parseArgs } from 'node:util';
 import { fileURLToPath } from 'node:url';
+import YAML from 'yaml';
 import { installSkill } from '../src/install.js';
-import { readNodeConfig } from '../src/node-config.js';
+import { readNodeConfig, buildMihomoProfile } from '../src/node-config.js';
 import { setupProxy, printablePlan } from '../src/setup.js';
 import { generateMobileQr } from '../src/qr.js';
 import { resetClaude } from '../src/claude-reset.js';
@@ -21,6 +22,7 @@ Commands:
   install       Install only the skill files [--target agents|claude|codex|DIR] [--force]
   setup         Preview Clash Verge setup; --config FILE [--yes] [--restart]
                 Optional: --verge-dir DIR --enable-tun --qr-dir DIR
+  export-profile Generate YAML only for official UI import --config FILE --output FILE
   probe         Read-only network probe [--url URL] [--proxy URL] [--offline]
   google-region Check Google/IP geolocation [--ssh-target USER@HOST]
                 Optional: --ssh-port N --identity-file FILE --on-vps --ticket FILE
@@ -60,6 +62,15 @@ async function main() {
   if (command === 'install' || command === 'install-skill') {
     const values = options(args, { target: { type: 'string', default: 'agents' }, force: { type: 'boolean', default: false } });
     print(installSkill(values));
+    return;
+  }
+
+  if (command === 'export-profile') {
+    const values = options(args, { config: { type: 'string' }, output: { type: 'string' } });
+    const node = readNodeConfig(required(values.config, '--config'));
+    const file = expandHome(required(values.output, '--output'));
+    atomicWrite(file, YAML.stringify(buildMihomoProfile(node)));
+    print({ profile: file, changedClash: false });
     return;
   }
 

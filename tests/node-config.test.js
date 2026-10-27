@@ -24,8 +24,17 @@ test('profile keeps sensitive traffic fail-closed and server management direct',
   assert.equal(profile.rules.at(-1), 'MATCH,节点选择');
 });
 
+test('flow is omitted unless the node explicitly uses one', () => {
+  const node = fakeNode();
+  delete node.flow;
+  assert.equal(new URL(buildVlessUri(node)).searchParams.has('flow'), false);
+  assert.equal('flow' in buildMihomoProfile(node).proxies[0], false);
+});
+
 test('invalid or placeholder config is rejected', () => {
   assert.throws(() => validateNodeConfig({ ...fakeNode(), port: 70000 }), /port/);
   assert.throws(() => validateNodeConfig({ ...fakeNode(), publicKey: 'REPLACE_WITH_REALITY_PUBLIC_KEY' }), /placeholder/);
+  assert.throws(() => validateNodeConfig({ ...fakeNode(), publicKey: 'A'.repeat(44) }), /Public key/);
+  assert.throws(() => validateNodeConfig({ ...fakeNode(), publicKey: 'A'.repeat(42) }), /Public key/);
   assert.throws(() => validateNodeConfig({ ...fakeNode(), shortId: 'abc' }), /even-length/);
 });

@@ -5,6 +5,8 @@ coverage/
 .network-proxy-guard/
 node.json
 node.local.json
+profile.yaml
+vless-link.txt
 *-qr/
 *.png
 *.log

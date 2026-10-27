@@ -24,8 +24,43 @@ const LAUNCH_ENV = [
   'CLAUDE_CODE_USE_VERTEX',
 ];
 
-function addTarget(set, target) {
-  if (exists(target)) set.add(path.resolve(target));
+function sharedSkillDirs(home) {
+  const claudeDir = path.join(home, '.claude');
+  if (!exists(claudeDir) || fs.lstatSync(claudeDir).isSymbolicLink()) return [];
+  return fs.readdirSync(claudeDir)
+    .filter((entry) => entry.toLowerCase() === 'skills')
+    .map((entry) => path.join(claudeDir, entry));
+}
+
+function canonical(target) {
+  try {
+    return fs.realpathSync(target);
+  } catch {
+    return path.resolve(target);
+  }
+}
+
+function related(left, right) {
+  return left === right
+    || left.startsWith(`${right}${path.sep}`)
+    || right.startsWith(`${left}${path.sep}`);
+}
+
+function assertSafeTarget(target, protectedPaths) {
+  const resolved = path.resolve(target);
+  const real = canonical(resolved);
+  for (const protectedPath of protectedPaths) {
+    if (related(resolved, path.resolve(protectedPath)) || related(real, canonical(protectedPath))) {
+      throw new Error(`Refusing protected or shared path: ${resolved}`);
+    }
+  }
+}
+
+function addTarget(set, target, protectedPaths) {
+  if (!exists(target)) return;
+  const resolved = path.resolve(target);
+  assertSafeTarget(resolved, protectedPaths);
+  set.add(resolved);
 }
 
 function scanTargets(home, extraPaths = []) {
@@ -34,35 +69,34 @@ function scanTargets(home, extraPaths = []) {
   if (exists(claudeDir) && fs.lstatSync(claudeDir).isSymbolicLink()) {
     throw new Error('Refusing to traverse a symlinked ~/.claude; review it manually');
   }
+  const skillDirs = sharedSkillDirs(home);
+  const scanProtected = [
+    ...skillDirs, path.join(home, '.agents'), path.join(home, '.codex'),
+    path.join(home, '.network-proxy-guard'),
+  ];
   if (exists(claudeDir)) {
     for (const entry of fs.readdirSync(claudeDir)) {
-      if (entry !== 'skills') addTarget(targets, path.join(claudeDir, entry));
+      if (entry.toLowerCase() !== 'skills') addTarget(targets, path.join(claudeDir, entry), scanProtected);
     }
   }
-  addTarget(targets, path.join(home, '.claude.json'));
-  addTarget(targets, path.join(home, '.cc-switch'));
+  addTarget(targets, path.join(home, '.claude.json'), scanProtected);
+  addTarget(targets, path.join(home, '.cc-switch'), scanProtected);
   for (const directory of LIBRARY_DIRS) {
     const parent = path.join(home, 'Library', directory);
     if (!exists(parent)) continue;
     for (const entry of fs.readdirSync(parent)) {
-      if (TRACE_NAME.test(entry)) addTarget(targets, path.join(parent, entry));
+      if (TRACE_NAME.test(entry)) addTarget(targets, path.join(parent, entry), scanProtected);
     }
   }
-  const protectedPaths = [
-    home, claudeDir, path.join(claudeDir, 'skills'),
-    path.join(home, '.agents'), path.join(home, '.codex'),
-    path.join(home, '.network-proxy-guard'),
-  ].map((target) => path.resolve(target));
+  const extraProtected = [claudeDir, ...scanProtected];
   for (const extra of extraPaths) {
     const resolved = path.resolve(extra);
     assertInsideHome(resolved, home);
+    if (resolved === path.resolve(home)) throw new Error('Refusing to reset HOME itself');
     if (!/claude|cc[._ -]?switch|anthropic/i.test(path.basename(resolved))) {
       throw new Error(`Extra path must be a specifically named Claude/Anthropic/CC Switch item: ${resolved}`);
     }
-    if (protectedPaths.some((protectedPath) => resolved === protectedPath || protectedPath.startsWith(`${resolved}${path.sep}`))) {
-      throw new Error(`Refusing protected or shared path: ${resolved}`);
-    }
-    addTarget(targets, resolved);
+    addTarget(targets, resolved, extraProtected);
   }
   const sorted = [...targets].sort();
   return sorted.filter((target) => !sorted.some((parent) => parent !== target && target.startsWith(`${parent}${path.sep}`)));
@@ -81,8 +115,8 @@ function shellPlan(home) {
     const original = fs.readFileSync(file, 'utf8');
     const lines = original.split(/(?<=\n)/);
     const content = lines.filter((line) => !SHELL_ENV.test(line) && !FISH_ENV.test(line)).join('');
-    const removed = lines.length - content.split(/(?<=\n)/).filter(Boolean).length;
-    if (content !== original) edits.push({ file, relative, original, content, removed: Math.max(1, removed) });
+    const removed = lines.filter((line) => SHELL_ENV.test(line) || FISH_ENV.test(line)).length;
+    if (content !== original) edits.push({ file, relative, original, content, removed });
   }
   return { edits, warnings };
 }
@@ -110,7 +144,7 @@ export async function resetClaude(options = {}) {
   const { edits, warnings } = shellPlan(home);
   const launchEnv = await (options.runtime?.listLaunchEnv ?? defaultLaunchEnv)(home);
   const unsetLaunchEnv = options.runtime?.unsetLaunchEnv ?? defaultUnsetLaunchEnv;
-  const preserved = [path.join(home, '.claude', 'skills'), path.join(home, '.agents'), path.join(home, '.codex')]
+  const preserved = [...sharedSkillDirs(home), path.join(home, '.agents'), path.join(home, '.codex')]
     .filter(exists).map((target) => relativeDisplay(target, home));
   const plan = {
     mode: yes ? 'apply' : 'dry-run',

@@ -54,9 +54,29 @@ export function redactUrl(value) {
       url.username = '***';
       url.password = '***';
     }
+    for (const key of url.searchParams.keys()) {
+      if (/token|key|secret|password|passwd|auth|signature|sig|credential|code/i.test(key)) {
+        url.searchParams.set(key, '***');
+      }
+    }
+    url.hash = '';
     return url.toString();
   } catch {
-    return value.replace(/\/\/[^\s/@]+@/, '//***@');
+    return value.replace(/\/\/[^\s/@]+@/, '//***@').replace(/[?#].*$/, '');
+  }
+}
+
+export function displayUrl(value) {
+  if (!value) return value;
+  try {
+    const url = new URL(redactUrl(value));
+    url.username = '';
+    url.password = '';
+    url.search = '';
+    url.hash = '';
+    return url.toString();
+  } catch {
+    return redactUrl(value).replace(/[?#].*$/, '');
   }
 }
 

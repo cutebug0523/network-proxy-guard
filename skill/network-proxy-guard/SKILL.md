@@ -37,6 +37,9 @@ Prefer `network-proxy-guard` when it is on PATH. Otherwise use `npx --yes networ
 network-proxy-guard setup --config /path/to/node.json
 network-proxy-guard setup --config /path/to/node.json --yes
 
+# YAML-only alternative for official UI import
+network-proxy-guard export-profile --config /path/to/node.json --output /private/path/profile.yaml
+
 # Independent optional actions
 network-proxy-guard claude-reset
 network-proxy-guard claude-reset --yes

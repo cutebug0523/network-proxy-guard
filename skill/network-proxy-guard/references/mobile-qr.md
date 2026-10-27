@@ -1,6 +1,6 @@
 # Offline mobile QR delivery
 
-Use the same `node.json` used for Clash setup. The CLI builds a VLESS Reality URI and renders it locally as `shadowrocket-qr.png`; it also writes `vless-link.txt`. No online QR service is used.
+Use the same `node.json` used for Clash setup. The CLI builds a VLESS Reality URI and renders it locally as `shadowrocket-qr.png`; it also writes `vless-link.txt`. No online QR service is used. Reality X25519 public keys must be exactly 43 base64url characters. `flow` is included only when explicitly present in the node config; do not blindly add Vision to every VLESS node.
 
 ```bash
 network-proxy-guard qr --config /private/path/node.json --output /private/path/mobile-qr

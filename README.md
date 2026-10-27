@@ -49,7 +49,7 @@ network-proxy-guard install --target agents
 
 ## 使用
 
-先复制示例并填入自己的节点。**真实 `node.json` 不要提交 Git 或上传。**
+先复制示例并填入自己的节点。**真实 `node.json`、导出的 profile YAML、VLESS 链接和二维码都不要提交 Git 或上传。**
 
 ```bash
 cp "$(npm root -g)/network-proxy-guard/skill/network-proxy-guard/assets/node.example.json" ./node.json
@@ -57,6 +57,14 @@ cp "$(npm root -g)/network-proxy-guard/skill/network-proxy-guard/assets/node.exa
 ```
 
 ### 1. 自动配置：先计划，确认后执行
+
+如果不想让工具写 Clash Verge 的内部索引，可以只导出 YAML，再用官方 UI 导入：
+
+```bash
+network-proxy-guard export-profile --config ./node.json --output ./profile.yaml
+```
+
+自动配置流程：
 
 ```bash
 network-proxy-guard setup --config ./node.json
@@ -66,7 +74,7 @@ network-proxy-guard setup --config ./node.json --yes
 
 Clash Verge 正在运行时，默认停止执行。只有明确允许关闭并重启应用时才加 `--restart`。TUN 默认保持原状；`--enable-tun` 只修改偏好，不会自动安装管理员服务。
 
-备份位于 `~/.network-proxy-guard/backups/`。没有 mihomo 核心时只能做 YAML 验证，输出会明确标注，不能冒充完整验证。
+备份位于 `~/.network-proxy-guard/backups/`。没有 mihomo 核心时只能做 YAML 验证，输出会明确标注，不能冒充完整验证。自动 `setup` 写入的是 Verge 内部文件，不是官方稳定 CLI；升级 Verge 后需要重新校验，介意时可改用上面的 `export-profile` 加官方 UI。
 
 ### 2. 生成手机二维码
 

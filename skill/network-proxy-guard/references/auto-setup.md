@@ -4,6 +4,8 @@
 
 The CLI imports and activates a local mihomo profile, sets rule mode, disables PAC, enables the system proxy when `verge.yaml` exists, and preserves TUN unless `--enable-tun` is explicitly requested. It does not install Xray, upgrade Clash Verge, install privileged services, or change SSH settings.
 
+Clash Verge Rev has no official local-file CLI importer. For the lowest-risk manual path, use `network-proxy-guard export-profile --config node.json --output profile.yaml` and import that YAML through the official UI. Automatic `setup` intentionally writes the documented internal files after a dry-run, explicit approval and backup; this is version-sensitive and must be revalidated after Verge upgrades. It preserves unknown fields and all unrelated profile entries rather than replacing the whole index.
+
 ## Flow
 
 1. Copy `assets/node.example.json` to a private working location and fill it with the user's node data. Never commit or upload the filled file.

@@ -8,7 +8,7 @@ Run `network-proxy-guard claude-reset` first and show the dry-run. Explain each 
 
 The reset covers common Claude Code/Desktop and CC Switch traces under the home directory, Claude-specific shell environment entries, and common launchd `ANTHROPIC_*`/`CLAUDE_*` variables. Use repeated `--extra-path` only for user-reviewed additional paths inside HOME.
 
-It deliberately preserves:
+It deliberately preserves both `skills` and case variants such as `Skills`, and checks real paths to prevent symlink bypasses:
 
 - Claude Code CLI and desktop applications; uninstall is not part of reset
 - project code and documents

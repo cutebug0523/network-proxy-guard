@@ -29,7 +29,7 @@ export function validateNodeConfig(input) {
     publicKey: String(input.publicKey).trim(),
     shortId: String(input.shortId).trim(),
     serverName: String(input.serverName).trim(),
-    flow: String(input.flow ?? 'xtls-rprx-vision').trim(),
+    flow: input.flow === undefined ? '' : String(input.flow ?? '').trim(),
     fingerprint: String(input.fingerprint ?? 'chrome').trim(),
     spiderX: String(input.spiderX ?? '/').trim(),
   };
@@ -37,7 +37,7 @@ export function validateNodeConfig(input) {
   if (!Number.isInteger(node.port) || node.port < 1 || node.port > 65535) throw new Error('Invalid node port');
   if (!UUID.test(node.uuid)) throw new Error('Invalid UUID');
   if (!SHORT_ID.test(node.shortId) || node.shortId.length % 2 !== 0) throw new Error('Short ID must be even-length hex');
-  if (!/^[A-Za-z0-9_-]{20,}$/.test(node.publicKey) || /REPLACE|EXAMPLE/i.test(node.publicKey)) {
+  if (!/^[A-Za-z0-9_-]{43}$/.test(node.publicKey) || /REPLACE|EXAMPLE/i.test(node.publicKey)) {
     throw new Error('Public key is missing or still a placeholder');
   }
   if (!/^[A-Za-z0-9.-]+$/.test(node.serverName)) throw new Error('Invalid serverName');
@@ -52,13 +52,13 @@ export function buildVlessUri(nodeInput) {
     type: 'tcp',
     security: 'reality',
     encryption: 'none',
-    flow: node.flow,
     sni: node.serverName,
     fp: node.fingerprint,
     pbk: node.publicKey,
     sid: node.shortId,
     spx: node.spiderX,
   });
+  if (node.flow) params.set('flow', node.flow);
   return `vless://${node.uuid}@${host}:${node.port}?${params.toString()}#${encodeURIComponent(node.name)}`;
 }
 
@@ -90,7 +90,7 @@ export function buildMihomoProfile(nodeInput) {
       udp: true,
       tls: true,
       servername: node.serverName,
-      flow: node.flow,
+      ...(node.flow ? { flow: node.flow } : {}),
       'client-fingerprint': node.fingerprint,
       'reality-opts': {
         'public-key': node.publicKey,

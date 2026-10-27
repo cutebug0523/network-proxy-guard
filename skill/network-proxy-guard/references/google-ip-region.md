@@ -6,7 +6,7 @@ A `google.com.hk` redirect means a Google region signal, not that the server is 
 
 1. Confirm which egress the local test uses.
 2. Run the Google test from the VPS itself without a client proxy. Use either SSH from the local machine or run the command on the VPS with `--on-vps`.
-3. Compare several independent geolocation databases and record time, egress IP and response `Location` header. WHOIS/ASN and YouTube region can be supporting evidence, not proof by themselves.
+3. Compare several independent geolocation databases and record time, the same public IPv4 and response `Location` header. Force IPv4 for this check; WHOIS/ASN and YouTube region can be supporting evidence, not proof by themselves.
 
 ```bash
 # Local evidence only; not enough for a provider ticket
@@ -23,7 +23,7 @@ SSH uses batch mode and never asks the agent for a password. The command perform
 
 ## Classification
 
-- VPS-direct Google HK redirect + at least two geolocation databases reporting US: `google-region-mismatch`; a ticket is justified.
+- VPS-direct Google HK redirect + at least two geolocation databases reporting US for the same valid IPv4: `google-region-mismatch`; a ticket is justified.
 - Local-only HK result: `needs-vps-direct-test`; inspect local egress/account state and do not blame the provider yet.
 - HK result without supporting US databases: provider/geo-data evidence is mixed; ask for verification rather than asserting a Google-only problem.
 - No HK redirect: report the observed result, not a blanket guarantee that every Google product recognizes the US.
