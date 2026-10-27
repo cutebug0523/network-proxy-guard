@@ -7,6 +7,44 @@
 
 **安装不会配置网络，也不会清理 Claude。** 配置和清理分别默认 dry-run，必须明确使用 `--yes` 才会执行。
 
+## 快速开始
+
+### 安装 skill
+
+LEE / 通用 agents：
+
+```bash
+npx network-proxy-guard@latest install --target agents
+```
+
+Claude Code / Codex：
+
+```bash
+npx network-proxy-guard@latest install --target claude
+npx network-proxy-guard@latest install --target codex
+```
+
+安装后重启对应 Agent。更新已安装 skill 时，`install --force` 会先保留旧目录备份，不会直接删除。
+
+也可以先全局安装命令，再安装 skill：
+
+```bash
+npm install -g network-proxy-guard
+network-proxy-guard install --target agents
+```
+
+### 查看全部功能和完整流程
+
+直接列出 CLI 命令：
+
+```bash
+npx network-proxy-guard@latest --help
+```
+
+安装 skill 后，也可以在 Agent 中直接输入：
+
+> 列出 network-proxy-guard 的全部功能、完整使用流程和安全确认步骤。
+
 ## 功能
 
 - Clash Verge：保留旧配置、备份、生成并激活 VLESS Reality 本地配置、规则模式、关闭 PAC 直连兜底
@@ -22,30 +60,6 @@
 - Node.js 18+
 - Clash Verge Rev / mihomo（仅客户端配置需要）
 - VPS 直连检测需要已有 SSH 密钥登录；不会询问或保存 SSH 密码
-
-## npm 安装
-
-### LEE / 通用 agents
-
-```bash
-npx network-proxy-guard@latest install --target agents
-```
-
-### Claude Code 或 Codex
-
-```bash
-npx network-proxy-guard@latest install --target claude
-npx network-proxy-guard@latest install --target codex
-```
-
-也可以先全局安装命令，再安装 skill：
-
-```bash
-npm install -g network-proxy-guard
-network-proxy-guard install --target agents
-```
-
-安装后重启对应 Agent。更新已安装 skill 时，`install --force` 会先保留旧目录备份，不会直接删除。
 
 ## 使用
 
