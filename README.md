@@ -46,6 +46,8 @@ network-proxy-guard install --target agents
 
 ### 查看全部功能和完整流程
 
+完整中文说明见 **[GUIDE.md](GUIDE.md)**：每项功能都解释“做什么”和“为什么这样做”。
+
 直接列出 CLI 命令和实测参考环境：
 
 ```bash
