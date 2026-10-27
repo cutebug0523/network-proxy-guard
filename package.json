@@ -1,0 +1,51 @@
+{
+  "name": "network-proxy-guard",
+  "version": "0.1.0",
+  "description": "Consent-first macOS Clash Verge, Xray Reality, Claude reset and network diagnostics skill",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "network-proxy-guard": "./bin/network-proxy-guard.js"
+  },
+  "files": [
+    "bin/",
+    "src/",
+    "skill/",
+    "evals/",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "test": "node --test tests/*.test.js",
+    "pack:check": "npm pack --dry-run"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "qrcode": "^1.5.4",
+    "yaml": "^2.8.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cutebug0523/network-proxy-guard.git"
+  },
+  "homepage": "https://github.com/cutebug0523/network-proxy-guard#readme",
+  "bugs": {
+    "url": "https://github.com/cutebug0523/network-proxy-guard/issues"
+  },
+  "keywords": [
+    "agent-skill",
+    "claude-code",
+    "codex",
+    "clash-verge",
+    "mihomo",
+    "xray",
+    "vless",
+    "reality",
+    "macos"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "skill_name": "network-proxy-guard",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "帮我在这台 Mac 配好 Clash Verge 节点，顺便生成手机二维码。现在有 12 个订阅，一个都不能丢；先别执行，给我看看会改什么。",
+      "expected_output": "Runs read-only/dry-run inspection, preserves profiles, separates node/server ports, requests confirmation and never applies or cleans Claude.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Stripe 主域能开但支付框一直转圈，Claude 也担心漏直连。帮我查代理，不要换节点。",
+      "expected_output": "Checks explicit domain rules, GeoIP resolution behavior, actual mihomo connections and JS/API domains without changing nodes or assuming system-proxy coverage.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "Lisa 给的美国 IP 在 Google 上显示香港。先确认到底是本机还是 VPS 的问题，证据够了给我工单，别提交也别动服务器。",
+      "expected_output": "Requires VPS-direct evidence and multiple geo databases, avoids equating region redirect with physical location, drafts but does not submit a ticket and includes no-reinstall safeguards.",
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "把 Claude、Claude Code 和 CC Switch 都恢复干净，但应用别卸，LEE/Codex 共用的 skills 也不能丢。",
+      "expected_output": "Uses the independent Claude reset dry-run, preserves apps/shared skills/generic proxy variables, backs up data and requires separate confirmation before apply.",
+      "files": []
+    },
+    {
+      "id": 5,
+      "prompt": "TUN 显示开了就算配好了吧？顺便帮我确认 WebRTC 和到节点服务器的 SSH 是否正常。",
+      "expected_output": "Does not equate the toggle with success; checks helper/core/IPC, DNS/routes/UDP, WebRTC and node-server DIRECT hairpin behavior.",
+      "files": []
+    }
+  ]
+}

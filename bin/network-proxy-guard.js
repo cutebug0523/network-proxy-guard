@@ -1,0 +1,147 @@
+#!/usr/bin/env node
+import fs from 'node:fs';
+import { parseArgs } from 'node:util';
+import { fileURLToPath } from 'node:url';
+import { installSkill } from '../src/install.js';
+import { readNodeConfig } from '../src/node-config.js';
+import { setupProxy, printablePlan } from '../src/setup.js';
+import { generateMobileQr } from '../src/qr.js';
+import { resetClaude } from '../src/claude-reset.js';
+import { detectGoogleRegion, buildLisaTicket, probeNetwork } from '../src/diagnostics.js';
+import { atomicWrite, expandHome } from '../src/utils.js';
+
+const HELP = `network-proxy-guard 0.1.0
+
+Install the agent skill (no proxy/Claude changes):
+  npx network-proxy-guard@latest install --target agents
+  npx network-proxy-guard@latest install --target claude
+  npx network-proxy-guard@latest install --target codex
+
+Commands:
+  install       Install only the skill files [--target agents|claude|codex|DIR] [--force]
+  setup         Preview Clash Verge setup; --config FILE [--yes] [--restart]
+                Optional: --verge-dir DIR --enable-tun --qr-dir DIR
+  probe         Read-only network probe [--url URL] [--proxy URL] [--offline]
+  google-region Check Google/IP geolocation [--ssh-target USER@HOST]
+                Optional: --ssh-port N --identity-file FILE --on-vps --ticket FILE
+  claude-reset  Preview local Claude reset; --yes applies [--extra-path PATH ...]
+  qr            Generate VLESS link + offline QR --config FILE --output DIR
+
+Safety: setup and claude-reset default to dry-run. Their confirmations are
+independent. Reset preserves apps, CLI and shared skills. No ticket is ever
+submitted automatically. QR files contain node credentials: do not publish them.
+`;
+
+function options(args, spec) {
+  return parseArgs({ args, options: spec, allowPositionals: false }).values;
+}
+
+function required(value, name) {
+  if (!value) throw new Error(`Missing required option: ${name}`);
+  return value;
+}
+
+function print(value) {
+  process.stdout.write(`${JSON.stringify(value, null, 2)}\n`);
+}
+
+async function main() {
+  const [command, ...args] = process.argv.slice(2);
+  if (!command || command === '--help' || command === '-h' || command === 'help') {
+    process.stdout.write(HELP);
+    return;
+  }
+  if (command === '--version' || command === '-v' || command === 'version') {
+    const pkg = JSON.parse(fs.readFileSync(fileURLToPath(new URL('../package.json', import.meta.url)), 'utf8'));
+    process.stdout.write(`${pkg.version}\n`);
+    return;
+  }
+
+  if (command === 'install' || command === 'install-skill') {
+    const values = options(args, { target: { type: 'string', default: 'agents' }, force: { type: 'boolean', default: false } });
+    print(installSkill(values));
+    return;
+  }
+
+  if (command === 'setup') {
+    const values = options(args, {
+      config: { type: 'string' }, 'verge-dir': { type: 'string' },
+      yes: { type: 'boolean', default: false }, restart: { type: 'boolean', default: false },
+      'enable-tun': { type: 'boolean', default: false }, 'qr-dir': { type: 'string' },
+    });
+    const node = readNodeConfig(required(values.config, '--config'));
+    const result = await setupProxy({
+      node,
+      vergeDir: values['verge-dir'] ? expandHome(values['verge-dir']) : undefined,
+      yes: values.yes,
+      restart: values.restart,
+      enableTun: values['enable-tun'],
+    });
+    print(printablePlan(result));
+    if (values['qr-dir']) {
+      if (!values.yes) {
+        print({ qr: { output: expandHome(values['qr-dir']), generated: false, reason: 'dry-run' } });
+      } else {
+        const qr = await generateMobileQr(node, expandHome(values['qr-dir']));
+        print({ qr });
+      }
+    }
+    return;
+  }
+
+  if (command === 'qr') {
+    const values = options(args, { config: { type: 'string' }, output: { type: 'string' } });
+    const node = readNodeConfig(required(values.config, '--config'));
+    const result = await generateMobileQr(node, expandHome(required(values.output, '--output')));
+    print(result);
+    return;
+  }
+
+  if (command === 'claude-reset') {
+    const values = options(args, {
+      yes: { type: 'boolean', default: false },
+      'extra-path': { type: 'string', multiple: true, default: [] },
+    });
+    const result = await resetClaude({
+      yes: values.yes,
+      extraPaths: values['extra-path'].map(expandHome),
+    });
+    print(result);
+    return;
+  }
+
+  if (command === 'probe') {
+    const values = options(args, {
+      url: { type: 'string' }, proxy: { type: 'string' },
+      offline: { type: 'boolean', default: false },
+    });
+    print(await probeNetwork({ url: values.url, proxy: values.proxy, offline: values.offline }));
+    return;
+  }
+
+  if (command === 'google-region') {
+    const values = options(args, {
+      'ssh-target': { type: 'string' }, 'ssh-port': { type: 'string' },
+      'identity-file': { type: 'string' }, 'on-vps': { type: 'boolean', default: false },
+      ticket: { type: 'string' },
+    });
+    const report = await detectGoogleRegion({
+      sshTarget: values['ssh-target'], sshPort: values['ssh-port'],
+      identityFile: values['identity-file'] ? expandHome(values['identity-file']) : undefined,
+      onVps: values['on-vps'],
+    });
+    print(report);
+    if (values.ticket) {
+      const file = expandHome(values.ticket);
+      atomicWrite(file, buildLisaTicket(report));
+      print({ ticket: file, submitted: false });
+    }
+    return;
+  }
+  throw new Error(`Unknown command: ${command}. Run --help.`);
+}
+
+main().catch((error) => {
+  process.stderr.write(`network-proxy-guard: ${error.message}\n`);
+  process.exitCode = 1;
+});
