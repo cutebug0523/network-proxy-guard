@@ -5,7 +5,7 @@
   "license": "MIT",
   "type": "module",
   "bin": {
-    "network-proxy-guard": "./bin/network-proxy-guard.js"
+    "network-proxy-guard": "bin/network-proxy-guard.js"
   },
   "files": [
     "bin/",
