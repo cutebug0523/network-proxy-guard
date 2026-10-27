@@ -10,8 +10,9 @@ import { generateMobileQr } from '../src/qr.js';
 import { resetClaude } from '../src/claude-reset.js';
 import { detectGoogleRegion, buildLisaTicket, probeNetwork } from '../src/diagnostics.js';
 import { atomicWrite, expandHome } from '../src/utils.js';
+import { REFERENCE_ENVIRONMENT } from '../src/reference.js';
 
-const HELP = `network-proxy-guard 0.1.0
+const HELP = `network-proxy-guard
 
 Install the agent skill (no proxy/Claude changes):
   npx network-proxy-guard@latest install --target agents
@@ -19,6 +20,7 @@ Install the agent skill (no proxy/Claude changes):
   npx network-proxy-guard@latest install --target codex
 
 Commands:
+  reference     Show the non-mandatory LisaHost reference environment
   install       Install only the skill files [--target agents|claude|codex|DIR] [--force]
   setup         Preview Clash Verge setup; --config FILE [--yes] [--restart]
                 Optional: --verge-dir DIR --enable-tun --qr-dir DIR
@@ -56,6 +58,11 @@ async function main() {
   if (command === '--version' || command === '-v' || command === 'version') {
     const pkg = JSON.parse(fs.readFileSync(fileURLToPath(new URL('../package.json', import.meta.url)), 'utf8'));
     process.stdout.write(`${pkg.version}\n`);
+    return;
+  }
+
+  if (command === 'reference') {
+    print(REFERENCE_ENVIRONMENT);
     return;
   }
 

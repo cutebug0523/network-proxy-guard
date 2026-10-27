@@ -13,6 +13,16 @@ function run(args) {
   return spawnSync(process.execPath, [bin, ...args], { encoding: 'utf8' });
 }
 
+test('reference command reports the non-mandatory LisaHost plan', () => {
+  const result = run(['reference']);
+  assert.equal(result.status, 0, result.stderr);
+  const reference = JSON.parse(result.stdout);
+  assert.equal(reference.required, false);
+  assert.equal(reference.plan, '美国4837基础版');
+  assert.equal(reference.provider, 'LisaHost（丽萨主机）');
+  assert.ok(reference.note.includes('其他 VPS 和套餐可以自行尝试'));
+});
+
 test('export-profile writes YAML without touching a Verge directory', (t) => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'npg-export-'));
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));

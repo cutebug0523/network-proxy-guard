@@ -1,6 +1,6 @@
 {
   "name": "network-proxy-guard",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Consent-first macOS Clash Verge, Xray Reality, Claude reset and network diagnostics skill",
   "license": "MIT",
   "type": "module",

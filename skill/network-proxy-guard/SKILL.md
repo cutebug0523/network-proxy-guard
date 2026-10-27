@@ -8,6 +8,10 @@ compatibility: macOS; Node.js 18+; Clash Verge Rev/mihomo for automatic client s
 
 Configure and diagnose a working proxy without silently changing the user's machine. The npm installer copies files only. Reading this skill never authorizes setup, cleanup, restarts, SSH changes, ticket submission, or package installation.
 
+## Reference environment (not a requirement)
+
+The original tested setup used **LisaHost（丽萨主机）美国4837基础版** (`US-LAX-4837`, Los Angeles), Xray + VLESS Reality + XTLS Vision, Clash Verge Rev/mihomo and Shadowrocket. Other VPS providers and plans are allowed, but users must revalidate port policy, IP history, Google region detection and route quality. Do not generalize the 4837 results to 9929, CN2 GIA or other networks. Run `network-proxy-guard reference` to show this as structured data.
+
 ## Safety contract
 
 1. Start with read-only inspection or a dry-run. Never pass `--yes` on the first inspection.

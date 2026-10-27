@@ -46,10 +46,11 @@ network-proxy-guard install --target agents
 
 ### 查看全部功能和完整流程
 
-直接列出 CLI 命令：
+直接列出 CLI 命令和实测参考环境：
 
 ```bash
 npx network-proxy-guard@latest --help
+npx network-proxy-guard@latest reference
 ```
 
 安装 skill 后，也可以在 Agent 中直接输入：
